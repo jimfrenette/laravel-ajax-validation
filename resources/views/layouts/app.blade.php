@@ -85,28 +85,42 @@
 
         var app = {
             DOM: {},
-            error: [],
-            user: {},
             init: function () {
 
-                this.DOM.form       = $('form');
-                this.DOM.form.name  = this.DOM.form.find('input[name="name"]');
-                this.DOM.form.email = this.DOM.form.find('input[name="email"]');
-                this.DOM.form.pwd   = this.DOM.form.find('input[name="password"]');
-                this.DOM.form.pwdc  = this.DOM.form.find('input[name="password_confirmation"]');
+                // only applies to register form
+                if (window.location.pathname == '/register') {
 
-                if (this.DOM.form.length) {
+                	var error = {};
+                		error.form = 'not submitted';
 
-                    this.error.push('init');
+                    this.DOM.form = $('form');
+                    this.DOM.form.name  = this.DOM.form.find('input[name="name"]');
+                    this.DOM.form.email = this.DOM.form.find('input[name="email"]');
+                    this.DOM.form.pwd   = this.DOM.form.find('input[name="password"]');
+                    this.DOM.form.pwdc  = this.DOM.form.find('input[name="password_confirmation"]');
+
+					this.DOM.form.name.group = this.DOM.form.name.closest('.form-group');
+					this.DOM.form.email.group = this.DOM.form.email.closest('.form-group');
+					this.DOM.form.pwd.group = this.DOM.form.pwd.closest('.form-group');
 
                     this.DOM.form.submit( function(e) {
-                        if (app.error.length > 0) {
+                        if (!$.isEmptyObject(error)) {
                             e.preventDefault();
+                            error = {};
 
-                            app.user.name = app.DOM.form.name.val();
-                            app.user.email = app.DOM.form.email.val();
-                            app.user.password = app.DOM.form.pwd.val();
-                            app.user.password_confirmation = app.DOM.form.pwdc.val();
+                            app.DOM.form.name.group.find('strong').text('');
+                            app.DOM.form.email.group.find('strong').text('');
+                            app.DOM.form.pwd.group.find('strong').text('');
+
+                            app.DOM.form.name.group.removeClass('has-error');
+                            app.DOM.form.email.group.removeClass('has-error');
+                            app.DOM.form.pwd.group.removeClass('has-error');
+
+                            var user = {};
+                            user.name = app.DOM.form.name.val();
+                            user.email = app.DOM.form.email.val();
+                            user.password = app.DOM.form.pwd.val();
+                            user.password_confirmation = app.DOM.form.pwdc.val();
 
                             var request = $.ajax({
                                 headers: {
@@ -115,18 +129,28 @@
                                 url: '/validate/user',
                                 type: 'POST',
                                 contentType: 'application/json',
-                                data: JSON.stringify(app.user)
+                                data: JSON.stringify(user)
                             });
                             request.done( function(data)
                             {
-                                console.log('done', data);
-                                app.error = [];
                                 app.DOM.form.trigger("submit");
                             });
                             request.fail( function(jqXHR)
                             {
-                                console.log('fail', jqXHR.responseJSON);
-                                app.error.push(jqXHR.responseJSON);
+                                error = jqXHR.responseJSON;
+                                if (error.name) {
+                                	app.DOM.form.name.group.find('strong').text(error.name[0]);
+                                	app.DOM.form.name.group.addClass('has-error');
+                                }
+                                if (error.email) {
+                                	app.DOM.form.email.group.find('strong').text(error.email[0]);
+                                	app.DOM.form.email.group.addClass('has-error');
+                                }
+                                if (error.password) {
+                                	app.DOM.form.pwd.group.find('strong').text(error.password[0]);
+                                	app.DOM.form.pwd.group.addClass('has-error');
+                                }
+
                             });
                         }
                     });
