@@ -15,9 +15,9 @@
 
                             <div class="col-md-6">
                                 <input type="text" class="form-control" name="name" value="{{ old('name') }}">
-							    <span class="help-block">
-							        <strong>{{ $errors->first('name') }}</strong>
-							    </span>
+                                <span class="help-block">
+                                    <strong>{{ $errors->first('name') }}</strong>
+                                </span>
                             </div>
                         </div>
 
