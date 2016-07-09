@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Factories\ActivationFactory;
 use App\Models\User;
 use Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -35,9 +37,12 @@ class AuthController extends Controller
      *
      * @return void
      */
-    public function __construct()
+    protected $activationFactory;
+
+    public function __construct(ActivationFactory $activationFactory)
     {
         $this->middleware($this->guestMiddleware(), ['except' => 'logout']);
+        $this->activationFactory = $activationFactory;
     }
 
     /**
@@ -64,5 +69,41 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
+    }
+
+    public function register(Request $request)
+    {
+        $validator = $this->validator($request->all());
+
+        if ($validator->fails()) {
+            $this->throwValidationException(
+                $request, $validator
+            );
+        }
+
+        $user = $this->create($request->all());
+
+        $this->activationFactory->sendActivationMail($user);
+
+        return redirect('/login')->with('activationStatus', true);
+    }
+
+    public function activateUser($token)
+    {
+        if ($user = $this->activationFactory->activateUser($token)) {
+            auth()->login($user);
+            return redirect($this->redirectPath());
+        }
+        abort(404);
+    }
+
+    public function authenticated(Request $request, $user)
+    {
+        if (!$user->activated) {
+            $this->activationFactory->sendActivationMail($user);
+            auth()->logout();
+            return back()->with('activationWarning', true);
+        }
+        return redirect()->intended($this->redirectPath());
     }
 }

@@ -15,13 +15,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::group(['middleware' => ['api']], function () {
-    Route::post('/validate/user', [
-        'uses' => 'Validation\UserController@user',
-    ]);
-});
-
 Route::auth();
+
+Route::get('user/activation/{token}', 'Auth\AuthController@activateUser')->name('user.activate');
 
 Route::get('/home', 'HomeController@index');
 

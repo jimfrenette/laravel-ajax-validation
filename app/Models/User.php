@@ -7,20 +7,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable
 {
     /**
-     * Get the validation rules that apply to the user.
-     *
-     * @return array
-     */
-    public function rules()
-    {
-        return [
-            'name' => 'required|max:255',
-            'email' => 'required|email|max:255|unique:users',
-            'password' => 'required|min:6|confirmed',
-        ];
-    }
-
-    /**
      * The attributes that are mass assignable.
      *
      * @var array
